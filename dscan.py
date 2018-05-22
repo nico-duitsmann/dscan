@@ -36,6 +36,7 @@ import os
 import re
 import select
 import sys
+import time
 from os import scandir
 
 from docopt import docopt
@@ -63,6 +64,8 @@ class Core(object):
         self.passing_errors = self.args["--passing"]
         self.no_color = self.args["--no-color"]
         self.verbose = self.args["--verbose"]
+        
+        self._num_files = 0
 
         self.dscan_init()
 
@@ -86,6 +89,7 @@ class Core(object):
                 for match in re.finditer(pattern, line):
                     print("\nFound '%s' in %s on line %s" % (
                         self.cput(match.groups(0), "red"), file, i + 1))
+                    print("%s\n%d: %s"% (file, i + 1, self.cput(match.groups(0), "red")))
         except Exception as e:
             if not self.passing_errors:
                 sys.exit(self.cput("ERR ", "red") + str(e))
@@ -99,9 +103,7 @@ class Core(object):
                 for num, line in enumerate(open(file, errors="replace", encoding="utf-8"), 1):
                     if self.ignore_case: line = line.lower()
                     if str(pattern) in line:
-                        print("\nFound '%s' in %s on line %s:\n%s" % (
-                            pattern, file, num,
-                            line.replace(pattern, RED + pattern + END).replace("\n", "")))
+                        print("%s\n%d: %s"% (file, num, line.replace(pattern, RED + pattern + END)))
             except (IOError, OSError, PermissionError) as e:
                 if not self.passing_errors:
                     sys.exit(self.cput("ERR ", "red") + str(e))
@@ -123,6 +125,7 @@ class Core(object):
         :param dir:
         """
         for entry in self.scan_tree(dir):
+            self._num_files += 1
             if self.verbose:
                 print("Processing " + self.cput(entry.path, "red") + " "*int(len(entry.path)), end="\r", flush=True)
             if self.search_regex:
@@ -151,6 +154,7 @@ class Core(object):
     def dscan_init(self):
         """Initialize dscan.
         """
+        start = time.time()
         # override input_data if core was initialized with piped data
         if self.piped_data is not None:
             self.process_data(self.piped_data)
@@ -160,7 +164,8 @@ class Core(object):
             else:
                 for data in self.input_data:
                     self.process_data(data)
-        sys.exit()
+        end = time.time()
+        sys.exit("\nElapsed time: %s for %d files (~%dms per file)" % (str(end-start), self._num_files, self._num_files/(end-start)))
 
 
 def main():
