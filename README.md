@@ -1,4 +1,0 @@
-- TODO
-    - format text when piped data is processed
-    - custom color formstting over args
-    - cross platform support
