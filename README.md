@@ -9,6 +9,7 @@ Licensed under the GNU General Public License Version 3
 
 Usage:
     dscan [options] <pattern> [<input_data>...]
+    
 Arguments:
     pattern                   The searched pattern.
     input_data                The input data can be a file, directory or url
